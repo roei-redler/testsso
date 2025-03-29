@@ -122,12 +122,38 @@
             auth: {
                 clientId: "369f395c-3610-4e08-ad5c-37e906bcd062", // Your app registration ID
                 authority: "https://login.microsoftonline.com/2348de7e-c063-4018-a666-012fbcc2efb1", // Your tenant ID
-                redirectUri: window.location.origin, // Must match the redirect URI in app registration
+                redirectUri: "https://roei-redler.github.io/testsso/", // Exact URL of your GitHub Pages site
+                postLogoutRedirectUri: "https://roei-redler.github.io/testsso/" // Same as redirectUri for simplicity
             },
             cache: {
-                cacheLocation: "sessionStorage", // "sessionStorage" or "localStorage"
-                storeAuthStateInCookie: false, // Set to true for IE 11 support
+                cacheLocation: "localStorage", // Changed to localStorage for persistence
+                storeAuthStateInCookie: true, // More reliable across platforms
             },
+            system: {
+                navigateFrameWait: 0,
+                loggerOptions: {
+                    loggerCallback: (level, message, containsPii) => {
+                        if (containsPii) {
+                            return;
+                        }
+                        switch (level) {
+                            case msal.LogLevel.Error:
+                                console.error(message);
+                                break;
+                            case msal.LogLevel.Info:
+                                console.info(message);
+                                break;
+                            case msal.LogLevel.Verbose:
+                                console.debug(message);
+                                break;
+                            case msal.LogLevel.Warning:
+                                console.warn(message);
+                                break;
+                        }
+                    },
+                    logLevel: msal.LogLevel.Verbose
+                }
+            }
         };
 
         // MSAL instance
@@ -155,6 +181,19 @@
         const apiResponse = document.getElementById("apiResponse");
         const apiResponseData = document.getElementById("apiResponseData");
 
+        // Debug function to help diagnose issues
+        function debugTokenClaims() {
+            const accounts = msalInstance.getAllAccounts();
+            if (accounts.length > 0) {
+                console.log("Account found:", accounts[0]);
+                if (accounts[0].idTokenClaims) {
+                    console.log("ID Token Claims:", accounts[0].idTokenClaims);
+                }
+            } else {
+                console.log("No accounts found");
+            }
+        }
+
         // Check if user is already signed in
         function checkAccount() {
             const currentAccounts = msalInstance.getAllAccounts();
@@ -169,34 +208,71 @@
                 signOutButton.style.display = "block";
                 profileContainer.style.display = "block";
                 
+                // Debug token claims
+                debugTokenClaims();
+                
                 // Update UI with user info
                 const account = currentAccounts[0];
                 userName.textContent = account.name || account.username;
                 profileName.textContent = account.name || "Not available";
                 profileUsername.textContent = account.username || "Not available";
-                // Fix: Use the correct property for email
-                profileEmail.textContent = account.username || "Not available";
+                
+                // Try to get email from different possible locations in the token
+                let email = "Not available";
+                if (account.idTokenClaims) {
+                    if (account.idTokenClaims.emails && account.idTokenClaims.emails.length > 0) {
+                        email = account.idTokenClaims.emails[0];
+                    } else if (account.idTokenClaims.email) {
+                        email = account.idTokenClaims.email;
+                    } else if (account.idTokenClaims.preferred_username) {
+                        email = account.idTokenClaims.preferred_username;
+                    }
+                }
+                
+                if (email === "Not available" && account.username) {
+                    email = account.username;
+                }
+                
+                profileEmail.textContent = email;
             }
         }
 
-        // Handle redirect promise
-        msalInstance.handleRedirectPromise()
-            .then(response => {
-                if (response) {
-                    // User signed in successfully
-                    console.log("Login success", response);
-                }
-                checkAccount();
-            })
-            .catch(error => {
-                console.error("Error during redirect handling:", error);
-            });
+        // Handle the auth redirects and hash fragments
+        function handleAuthResponse() {
+            return msalInstance.handleRedirectPromise()
+                .then(response => {
+                    if (response) {
+                        // User signed in successfully
+                        console.log("Login success:", response);
+                        
+                        // Clean up the URL by removing the hash fragments
+                        if (window.history && window.history.replaceState) {
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
+                    }
+                    checkAccount();
+                })
+                .catch(error => {
+                    console.error("Authentication error:", error);
+                    if (error.errorMessage) {
+                        console.error("Error details:", error.errorMessage);
+                    }
+                    checkAccount();
+                });
+        }
+
+        // Call this function when the page loads
+        window.addEventListener('load', function() {
+            console.log("Page loaded, handling auth response...");
+            handleAuthResponse();
+        });
 
         // Sign in function
         function signIn() {
+            console.log("Initiating sign-in...");
             msalInstance.loginRedirect(loginRequest)
                 .catch(error => {
-                    console.error("Error during login:", error);
+                    console.error("Error during login redirect:", error);
                 });
         }
 
@@ -204,14 +280,18 @@
         function signOut() {
             const currentAccounts = msalInstance.getAllAccounts();
             if (currentAccounts.length === 0) {
+                console.log("No accounts to sign out");
                 return;
             }
             
+            console.log("Signing out account:", currentAccounts[0].username);
+            
             const logoutRequest = {
-                account: msalInstance.getAccountByUsername(currentAccounts[0].username)
+                account: currentAccounts[0],
+                postLogoutRedirectUri: msalConfig.auth.postLogoutRedirectUri
             };
             
-            msalInstance.logout(logoutRequest)
+            msalInstance.logoutRedirect(logoutRequest)
                 .catch(error => {
                     console.error("Error during logout:", error);
                 });
@@ -221,37 +301,49 @@
         async function callMsGraphApi() {
             const currentAccounts = msalInstance.getAllAccounts();
             if (currentAccounts.length === 0) {
+                console.log("No authenticated account found");
                 return;
             }
             
             const account = currentAccounts[0];
+            console.log("Calling Microsoft Graph API for account:", account.username);
             
             try {
                 // Get access token
+                console.log("Acquiring token silently...");
                 const response = await msalInstance.acquireTokenSilent({
                     ...tokenRequest,
                     account: account
                 });
                 
+                console.log("Token acquired successfully");
+                
                 // Call Microsoft Graph with the token
+                console.log("Calling Microsoft Graph API...");
                 const graphResponse = await fetch("https://graph.microsoft.com/v1.0/me", {
                     headers: {
                         "Authorization": `Bearer ${response.accessToken}`
                     }
                 });
                 
+                if (!graphResponse.ok) {
+                    throw new Error(`Graph API error: ${graphResponse.status} ${graphResponse.statusText}`);
+                }
+                
                 const data = await graphResponse.json();
+                console.log("Graph API response:", data);
                 
                 // Display API response
                 apiResponseData.textContent = JSON.stringify(data, null, 2);
                 apiResponse.style.display = "block";
                 
             } catch (error) {
+                console.error("Error in Graph API call:", error);
+                
                 if (error instanceof msal.InteractionRequiredAuthError) {
-                    // Fallback to interaction when silent token acquisition fails
+                    console.log("Interaction required, acquiring token via redirect...");
                     msalInstance.acquireTokenRedirect(tokenRequest);
                 } else {
-                    console.error("Error calling MS Graph API:", error);
                     apiResponseData.textContent = "Error calling Microsoft Graph API: " + error.message;
                     apiResponse.style.display = "block";
                 }
@@ -262,9 +354,6 @@
         signInButton.addEventListener("click", signIn);
         signOutButton.addEventListener("click", signOut);
         callApiButton.addEventListener("click", callMsGraphApi);
-
-        // Initialize UI
-        checkAccount();
     </script>
 </body>
 </html>
