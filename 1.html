@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Microsoft Entra ID Authentication with MSAL.js</title>
+    <title>Microsoft Entra ID Authentication - SPA</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -82,7 +82,7 @@
         }
         .status {
             margin-top: 20px;
-            padding: 10px;
+            padding:.625rem;
             border-radius: 4px;
         }
         .error {
@@ -108,7 +108,7 @@
         </header>
 
         <div class="content">
-            <p>This page demonstrates authentication with Microsoft Entra ID using the Microsoft Authentication Library for JavaScript (MSAL.js).</p>
+            <p>This page demonstrates authentication with Microsoft Entra ID using the Microsoft Authentication Library for JavaScript (MSAL.js) with Authorization Code Flow + PKCE.</p>
             
             <div id="statusMessage" class="status" style="display: none;"></div>
             
@@ -134,13 +134,12 @@
     <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
     
     <script>
-        // MSAL configuration
+        // MSAL configuration - Authorization Code Flow for SPAs
         const msalConfig = {
             auth: {
                 clientId: "369f395c-3610-4e08-ad5c-37e906bcd062",
                 authority: "https://login.microsoftonline.com/2348de7e-c063-4018-a666-012fbcc2efb1",
-                redirectUri: "https://roei-redler.github.io/testsso/",
-                postLogoutRedirectUri: "https://roei-redler.github.io/testsso/"
+                redirectUri: "https://roei-redler.github.io/testsso/"
             },
             cache: {
                 cacheLocation: "localStorage",
@@ -148,26 +147,12 @@
             },
             system: {
                 loggerOptions: {
+                    logLevel: msal.LogLevel.Verbose,
                     loggerCallback: (level, message, containsPii) => {
-                        if (containsPii) {
-                            return;
+                        if (!containsPii) {
+                            console.log(message);
                         }
-                        switch (level) {
-                            case msal.LogLevel.Error:
-                                console.error(message);
-                                break;
-                            case msal.LogLevel.Info:
-                                console.info(message);
-                                break;
-                            case msal.LogLevel.Verbose:
-                                console.debug(message);
-                                break;
-                            case msal.LogLevel.Warning:
-                                console.warn(message);
-                                break;
-                        }
-                    },
-                    logLevel: msal.LogLevel.Verbose
+                    }
                 }
             }
         };
@@ -178,10 +163,6 @@
         // Request objects
         const loginRequest = {
             scopes: ["openid", "profile", "email", "User.Read"]
-        };
-
-        const tokenRequest = {
-            scopes: ["User.Read"]
         };
 
         // UI elements
@@ -239,8 +220,6 @@
                 }
                 
                 profileEmail.textContent = email;
-                
-                showStatus(`Successfully signed in as ${account.name || account.username}`, false);
             } else {
                 // User is not signed in
                 signInButton.style.display = "block";
@@ -269,11 +248,10 @@
                 .then(response => {
                     if (response) {
                         console.log("Successfully authenticated");
-                        checkAccount();
-                    } else {
-                        console.log("No redirect response to handle");
-                        checkAccount();
+                        const account = response.account;
+                        showStatus(`Successfully signed in as ${account.name || account.username}`, false);
                     }
+                    checkAccount();
                 })
                 .catch(error => {
                     console.error("Authentication error:", error);
@@ -296,8 +274,7 @@
             const account = checkAccount();
             if (account) {
                 msalInstance.logoutRedirect({
-                    account: account,
-                    postLogoutRedirectUri: msalConfig.auth.postLogoutRedirectUri
+                    account: account
                 }).catch(error => {
                     console.error("Error during sign out:", error);
                     showStatus(`Sign out error: ${error.message || "Unknown error"}`, true);
@@ -314,24 +291,24 @@
             }
             
             try {
-                // Try to acquire token silently first
-                const response = await msalInstance.acquireTokenSilent({
-                    ...tokenRequest,
+                // Acquire token silently first
+                const tokenResponse = await msalInstance.acquireTokenSilent({
+                    scopes: ["User.Read"],
                     account: account
                 });
                 
-                // Call Graph API with the token
-                const graphResponse = await fetch("https://graph.microsoft.com/v1.0/me", {
+                // Call Microsoft Graph API
+                const response = await fetch("https://graph.microsoft.com/v1.0/me", {
                     headers: {
-                        "Authorization": `Bearer ${response.accessToken}`
+                        "Authorization": `Bearer ${tokenResponse.accessToken}`
                     }
                 });
                 
-                if (!graphResponse.ok) {
-                    throw new Error(`${graphResponse.status}: ${graphResponse.statusText}`);
+                if (!response.ok) {
+                    throw new Error(`${response.status}: ${response.statusText}`);
                 }
                 
-                const data = await graphResponse.json();
+                const data = await response.json();
                 
                 // Display the response
                 apiResponseData.textContent = JSON.stringify(data, null, 2);
@@ -342,8 +319,33 @@
                 
                 if (error instanceof msal.InteractionRequiredAuthError) {
                     // If silent token acquisition fails, try interactive
-                    console.log("Interaction required, acquiring token interactively");
-                    msalInstance.acquireTokenRedirect(tokenRequest);
+                    try {
+                        const tokenResponse = await msalInstance.acquireTokenPopup({
+                            scopes: ["User.Read"]
+                        });
+                        
+                        // Call Microsoft Graph API
+                        const response = await fetch("https://graph.microsoft.com/v1.0/me", {
+                            headers: {
+                                "Authorization": `Bearer ${tokenResponse.accessToken}`
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Display the response
+                        apiResponseData.textContent = JSON.stringify(data, null, 2);
+                        apiResponse.style.display = "block";
+                        
+                    } catch (interactiveError) {
+                        apiResponseData.textContent = `Error: ${interactiveError.message || "Unknown error"}`;
+                        apiResponse.style.display = "block";
+                        showStatus(`API error: ${interactiveError.message || "Unknown error"}`, true);
+                    }
                 } else {
                     // Display the error
                     apiResponseData.textContent = `Error: ${error.message || "Unknown error"}`;
@@ -358,16 +360,10 @@
         signOutButton.addEventListener("click", signOut);
         callApiButton.addEventListener("click", callMsGraphApi);
 
-        // Initialize
+        // Initialize on page load
         window.addEventListener("load", () => {
             handleRedirectResponse();
         });
-
-        // Also check for hash parameters on page load
-        if (window.location.hash) {
-            console.log("Hash parameters detected, handling redirect");
-            handleRedirectResponse();
-        }
     </script>
 </body>
 </html>
