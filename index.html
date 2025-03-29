@@ -80,6 +80,21 @@
         .content {
             margin-top: 20px;
         }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .error {
+            background-color: #fde7e9;
+            border: 1px solid #f5c2c7;
+            color: #842029;
+        }
+        .success {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            color: #0f5132;
+        }
     </style>
 </head>
 <body>
@@ -94,6 +109,8 @@
 
         <div class="content">
             <p>This page demonstrates authentication with Microsoft Entra ID using the Microsoft Authentication Library for JavaScript (MSAL.js).</p>
+            
+            <div id="statusMessage" class="status" style="display: none;"></div>
             
             <div id="profileContainer" class="profile-container">
                 <h2>Welcome, <span id="userName">User</span>!</h2>
@@ -120,17 +137,16 @@
         // MSAL configuration
         const msalConfig = {
             auth: {
-                clientId: "369f395c-3610-4e08-ad5c-37e906bcd062", // Your app registration ID
-                authority: "https://login.microsoftonline.com/2348de7e-c063-4018-a666-012fbcc2efb1", // Your tenant ID
-                redirectUri: "https://roei-redler.github.io/testsso/", // Exact URL of your GitHub Pages site
-                postLogoutRedirectUri: "https://roei-redler.github.io/testsso/" // Same as redirectUri for simplicity
+                clientId: "369f395c-3610-4e08-ad5c-37e906bcd062",
+                authority: "https://login.microsoftonline.com/2348de7e-c063-4018-a666-012fbcc2efb1",
+                redirectUri: "https://roei-redler.github.io/testsso/",
+                postLogoutRedirectUri: "https://roei-redler.github.io/testsso/"
             },
             cache: {
-                cacheLocation: "localStorage", // Changed to localStorage for persistence
-                storeAuthStateInCookie: true, // More reliable across platforms
+                cacheLocation: "localStorage",
+                storeAuthStateInCookie: true
             },
             system: {
-                navigateFrameWait: 0,
                 loggerOptions: {
                     loggerCallback: (level, message, containsPii) => {
                         if (containsPii) {
@@ -156,15 +172,14 @@
             }
         };
 
-        // MSAL instance
+        // Initialize MSAL
         const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-        // Login request object
+        // Request objects
         const loginRequest = {
             scopes: ["openid", "profile", "email", "User.Read"]
         };
 
-        // Token request object for Microsoft Graph
         const tokenRequest = {
             scopes: ["User.Read"]
         };
@@ -180,44 +195,34 @@
         const callApiButton = document.getElementById("callApiButton");
         const apiResponse = document.getElementById("apiResponse");
         const apiResponseData = document.getElementById("apiResponseData");
+        const statusMessage = document.getElementById("statusMessage");
 
-        // Debug function to help diagnose issues
-        function debugTokenClaims() {
-            const accounts = msalInstance.getAllAccounts();
-            if (accounts.length > 0) {
-                console.log("Account found:", accounts[0]);
-                if (accounts[0].idTokenClaims) {
-                    console.log("ID Token Claims:", accounts[0].idTokenClaims);
-                }
-            } else {
-                console.log("No accounts found");
-            }
+        // Show status message
+        function showStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = isError ? "status error" : "status success";
+            statusMessage.style.display = "block";
+            
+            // Hide after 10 seconds
+            setTimeout(() => {
+                statusMessage.style.display = "none";
+            }, 10000);
         }
 
-        // Check if user is already signed in
-        function checkAccount() {
-            const currentAccounts = msalInstance.getAllAccounts();
-            if (currentAccounts.length === 0) {
-                // No user signed in
-                signInButton.style.display = "block";
-                signOutButton.style.display = "none";
-                profileContainer.style.display = "none";
-            } else {
-                // User signed in
+        // Update UI based on authentication state
+        function updateUI(account) {
+            if (account) {
+                // User is signed in
                 signInButton.style.display = "none";
                 signOutButton.style.display = "block";
                 profileContainer.style.display = "block";
                 
-                // Debug token claims
-                debugTokenClaims();
-                
-                // Update UI with user info
-                const account = currentAccounts[0];
-                userName.textContent = account.name || account.username;
+                // Update profile information
+                userName.textContent = account.name || "User";
                 profileName.textContent = account.name || "Not available";
                 profileUsername.textContent = account.username || "Not available";
                 
-                // Try to get email from different possible locations in the token
+                // Try to get email from claims
                 let email = "Not available";
                 if (account.idTokenClaims) {
                     if (account.idTokenClaims.emails && account.idTokenClaims.emails.length > 0) {
@@ -234,92 +239,88 @@
                 }
                 
                 profileEmail.textContent = email;
+                
+                showStatus(`Successfully signed in as ${account.name || account.username}`, false);
+            } else {
+                // User is not signed in
+                signInButton.style.display = "block";
+                signOutButton.style.display = "none";
+                profileContainer.style.display = "none";
             }
         }
 
-        // Handle the auth redirects and hash fragments
-        function handleAuthResponse() {
-            return msalInstance.handleRedirectPromise()
+        // Check if user is already signed in
+        function checkAccount() {
+            const currentAccounts = msalInstance.getAllAccounts();
+            if (currentAccounts.length > 0) {
+                console.log("Account found:", currentAccounts[0].username);
+                updateUI(currentAccounts[0]);
+                return currentAccounts[0];
+            } else {
+                console.log("No authenticated accounts found");
+                updateUI(null);
+                return null;
+            }
+        }
+
+        // Handle the authentication redirect
+        function handleRedirectResponse() {
+            msalInstance.handleRedirectPromise()
                 .then(response => {
                     if (response) {
-                        // User signed in successfully
-                        console.log("Login success:", response);
-                        
-                        // Clean up the URL by removing the hash fragments
-                        if (window.history && window.history.replaceState) {
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                        }
+                        console.log("Successfully authenticated");
+                        checkAccount();
+                    } else {
+                        console.log("No redirect response to handle");
+                        checkAccount();
                     }
-                    checkAccount();
                 })
                 .catch(error => {
                     console.error("Authentication error:", error);
-                    if (error.errorMessage) {
-                        console.error("Error details:", error.errorMessage);
-                    }
+                    showStatus(`Authentication error: ${error.message || "Unknown error"}`, true);
                     checkAccount();
                 });
         }
 
-        // Call this function when the page loads
-        window.addEventListener('load', function() {
-            console.log("Page loaded, handling auth response...");
-            handleAuthResponse();
-        });
-
         // Sign in function
         function signIn() {
-            console.log("Initiating sign-in...");
             msalInstance.loginRedirect(loginRequest)
                 .catch(error => {
-                    console.error("Error during login redirect:", error);
+                    console.error("Error during sign in:", error);
+                    showStatus(`Sign in error: ${error.message || "Unknown error"}`, true);
                 });
         }
 
         // Sign out function
         function signOut() {
-            const currentAccounts = msalInstance.getAllAccounts();
-            if (currentAccounts.length === 0) {
-                console.log("No accounts to sign out");
-                return;
-            }
-            
-            console.log("Signing out account:", currentAccounts[0].username);
-            
-            const logoutRequest = {
-                account: currentAccounts[0],
-                postLogoutRedirectUri: msalConfig.auth.postLogoutRedirectUri
-            };
-            
-            msalInstance.logoutRedirect(logoutRequest)
-                .catch(error => {
-                    console.error("Error during logout:", error);
+            const account = checkAccount();
+            if (account) {
+                msalInstance.logoutRedirect({
+                    account: account,
+                    postLogoutRedirectUri: msalConfig.auth.postLogoutRedirectUri
+                }).catch(error => {
+                    console.error("Error during sign out:", error);
+                    showStatus(`Sign out error: ${error.message || "Unknown error"}`, true);
                 });
+            }
         }
 
         // Call Microsoft Graph API
         async function callMsGraphApi() {
-            const currentAccounts = msalInstance.getAllAccounts();
-            if (currentAccounts.length === 0) {
-                console.log("No authenticated account found");
+            const account = checkAccount();
+            if (!account) {
+                showStatus("Please sign in first", true);
                 return;
             }
             
-            const account = currentAccounts[0];
-            console.log("Calling Microsoft Graph API for account:", account.username);
-            
             try {
-                // Get access token
-                console.log("Acquiring token silently...");
+                // Try to acquire token silently first
                 const response = await msalInstance.acquireTokenSilent({
                     ...tokenRequest,
                     account: account
                 });
                 
-                console.log("Token acquired successfully");
-                
-                // Call Microsoft Graph with the token
-                console.log("Calling Microsoft Graph API...");
+                // Call Graph API with the token
                 const graphResponse = await fetch("https://graph.microsoft.com/v1.0/me", {
                     headers: {
                         "Authorization": `Bearer ${response.accessToken}`
@@ -327,33 +328,46 @@
                 });
                 
                 if (!graphResponse.ok) {
-                    throw new Error(`Graph API error: ${graphResponse.status} ${graphResponse.statusText}`);
+                    throw new Error(`${graphResponse.status}: ${graphResponse.statusText}`);
                 }
                 
                 const data = await graphResponse.json();
-                console.log("Graph API response:", data);
                 
-                // Display API response
+                // Display the response
                 apiResponseData.textContent = JSON.stringify(data, null, 2);
                 apiResponse.style.display = "block";
                 
             } catch (error) {
-                console.error("Error in Graph API call:", error);
+                console.error("Error calling Graph API:", error);
                 
                 if (error instanceof msal.InteractionRequiredAuthError) {
-                    console.log("Interaction required, acquiring token via redirect...");
+                    // If silent token acquisition fails, try interactive
+                    console.log("Interaction required, acquiring token interactively");
                     msalInstance.acquireTokenRedirect(tokenRequest);
                 } else {
-                    apiResponseData.textContent = "Error calling Microsoft Graph API: " + error.message;
+                    // Display the error
+                    apiResponseData.textContent = `Error: ${error.message || "Unknown error"}`;
                     apiResponse.style.display = "block";
+                    showStatus(`API error: ${error.message || "Unknown error"}`, true);
                 }
             }
         }
 
-        // Event listeners
+        // Set up event listeners
         signInButton.addEventListener("click", signIn);
         signOutButton.addEventListener("click", signOut);
         callApiButton.addEventListener("click", callMsGraphApi);
+
+        // Initialize
+        window.addEventListener("load", () => {
+            handleRedirectResponse();
+        });
+
+        // Also check for hash parameters on page load
+        if (window.location.hash) {
+            console.log("Hash parameters detected, handling redirect");
+            handleRedirectResponse();
+        }
     </script>
 </body>
 </html>
