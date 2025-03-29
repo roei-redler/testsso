@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Entra ID Authentication with MSAL.js</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        h1 {
+            margin: 0;
+            color: #0078d4;
+        }
+        button {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #106ebe;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #signInButton, #signOutButton {
+            display: none;
+        }
+        .profile-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .profile-info {
+            margin-bottom: 10px;
+        }
+        .profile-info strong {
+            width: 120px;
+            display: inline-block;
+        }
+        .api-response {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            border-left: 4px solid #0078d4;
+        }
+        .api-response pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        .content {
+            margin-top: 20px;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .error {
+            background-color: #fde7e9;
+            border: 1px solid #f5c2c7;
+            color: #842029;
+        }
+        .success {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            color: #0f5132;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Microsoft Entra ID Authentication</h1>
+            <div>
+                <button id="signInButton">Sign In</button>
+                <button id="signOutButton">Sign Out</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <p>This page demonstrates authentication with Microsoft Entra ID using the Microsoft Authentication Library for JavaScript (MSAL.js).</p>
+            
+            <div id="statusMessage" class="status" style="display: none;"></div>
+            
+            <div id="profileContainer" class="profile-container">
+                <h2>Welcome, <span id="userName">User</span>!</h2>
+                <div class="profile-info"><strong>Name:</strong> <span id="profileName"></span></div>
+                <div class="profile-info"><strong>Username:</strong> <span id="profileUsername"></span></div>
+                <div class="profile-info"><strong>Email:</strong> <span id="profileEmail"></span></div>
+                
+                <div style="margin-top: 20px;">
+                    <button id="callApiButton">Call Microsoft Graph API</button>
+                </div>
+                
+                <div id="apiResponse" class="api-response" style="display: none;">
+                    <h3>API Response:</h3>
+                    <pre id="apiResponseData"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Using the official Microsoft CDN for MSAL.js -->
+    <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+    
+    <script>
+        // MSAL configuration
+        const msalConfig = {
+            auth: {
+                clientId: "369f395c-3610-4e08-ad5c-37e906bcd062",
+                authority: "https://login.microsoftonline.com/2348de7e-c063-4018-a666-012fbcc2efb1",
+                redirectUri: "https://roei-redler.github.io/testsso/",
+                postLogoutRedirectUri: "https://roei-redler.github.io/testsso/"
+            },
+            cache: {
+                cacheLocation: "localStorage",
+                storeAuthStateInCookie: true
+            },
+            system: {
+                loggerOptions: {
+                    loggerCallback: (level, message, containsPii) => {
+                        if (containsPii) {
+                            return;
+                        }
+                        switch (level) {
+                            case msal.LogLevel.Error:
+                                console.error(message);
+                                break;
+                            case msal.LogLevel.Info:
+                                console.info(message);
+                                break;
+                            case msal.LogLevel.Verbose:
+                                console.debug(message);
+                                break;
+                            case msal.LogLevel.Warning:
+                                console.warn(message);
+                                break;
+                        }
+                    },
+                    logLevel: msal.LogLevel.Verbose
+                }
+            }
+        };
+
+        // Initialize MSAL
+        const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+        // Request objects
+        const loginRequest = {
+            scopes: ["openid", "profile", "email", "User.Read"]
+        };
+
+        const tokenRequest = {
+            scopes: ["User.Read"]
+        };
+
+        // UI elements
+        const signInButton = document.getElementById("signInButton");
+        const signOutButton = document.getElementById("signOutButton");
+        const profileContainer = document.getElementById("profileContainer");
+        const userName = document.getElementById("userName");
+        const profileName = document.getElementById("profileName");
+        const profileUsername = document.getElementById("profileUsername");
+        const profileEmail = document.getElementById("profileEmail");
+        const callApiButton = document.getElementById("callApiButton");
+        const apiResponse = document.getElementById("apiResponse");
+        const apiResponseData = document.getElementById("apiResponseData");
+        const statusMessage = document.getElementById("statusMessage");
+
+        // Show status message
+        function showStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = isError ? "status error" : "status success";
+            statusMessage.style.display = "block";
+            
+            // Hide after 10 seconds
+            setTimeout(() => {
+                statusMessage.style.display = "none";
+            }, 10000);
+        }
+
+        // Update UI based on authentication state
+        function updateUI(account) {
+            if (account) {
+                // User is signed in
+                signInButton.style.display = "none";
+                signOutButton.style.display = "block";
+                profileContainer.style.display = "block";
+                
+                // Update profile information
+                userName.textContent = account.name || "User";
+                profileName.textContent = account.name || "Not available";
+                profileUsername.textContent = account.username || "Not available";
+                
+                // Try to get email from claims
+                let email = "Not available";
+                if (account.idTokenClaims) {
+                    if (account.idTokenClaims.emails && account.idTokenClaims.emails.length > 0) {
+                        email = account.idTokenClaims.emails[0];
+                    } else if (account.idTokenClaims.email) {
+                        email = account.idTokenClaims.email;
+                    } else if (account.idTokenClaims.preferred_username) {
+                        email = account.idTokenClaims.preferred_username;
+                    }
+                }
+                
+                if (email === "Not available" && account.username) {
+                    email = account.username;
+                }
+                
+                profileEmail.textContent = email;
+                
+                showStatus(`Successfully signed in as ${account.name || account.username}`, false);
+            } else {
+                // User is not signed in
+                signInButton.style.display = "block";
+                signOutButton.style.display = "none";
+                profileContainer.style.display = "none";
+            }
+        }
+
+        // Check if user is already signed in
+        function checkAccount() {
+            const currentAccounts = msalInstance.getAllAccounts();
+            if (currentAccounts.length > 0) {
+                console.log("Account found:", currentAccounts[0].username);
+                updateUI(currentAccounts[0]);
+                return currentAccounts[0];
+            } else {
+                console.log("No authenticated accounts found");
+                updateUI(null);
+                return null;
+            }
+        }
+
+        // Handle the authentication redirect
+        function handleRedirectResponse() {
+            msalInstance.handleRedirectPromise()
+                .then(response => {
+                    if (response) {
+                        console.log("Successfully authenticated");
+                        checkAccount();
+                    } else {
+                        console.log("No redirect response to handle");
+                        checkAccount();
+                    }
+                })
+                .catch(error => {
+                    console.error("Authentication error:", error);
+                    showStatus(`Authentication error: ${error.message || "Unknown error"}`, true);
+                    checkAccount();
+                });
+        }
+
+        // Sign in function
+        function signIn() {
+            msalInstance.loginRedirect(loginRequest)
+                .catch(error => {
+                    console.error("Error during sign in:", error);
+                    showStatus(`Sign in error: ${error.message || "Unknown error"}`, true);
+                });
+        }
+
+        // Sign out function
+        function signOut() {
+            const account = checkAccount();
+            if (account) {
+                msalInstance.logoutRedirect({
+                    account: account,
+                    postLogoutRedirectUri: msalConfig.auth.postLogoutRedirectUri
+                }).catch(error => {
+                    console.error("Error during sign out:", error);
+                    showStatus(`Sign out error: ${error.message || "Unknown error"}`, true);
+                });
+            }
+        }
+
+        // Call Microsoft Graph API
+        async function callMsGraphApi() {
+            const account = checkAccount();
+            if (!account) {
+                showStatus("Please sign in first", true);
+                return;
+            }
+            
+            try {
+                // Try to acquire token silently first
+                const response = await msalInstance.acquireTokenSilent({
+                    ...tokenRequest,
+                    account: account
+                });
+                
+                // Call Graph API with the token
+                const graphResponse = await fetch("https://graph.microsoft.com/v1.0/me", {
+                    headers: {
+                        "Authorization": `Bearer ${response.accessToken}`
+                    }
+                });
+                
+                if (!graphResponse.ok) {
+                    throw new Error(`${graphResponse.status}: ${graphResponse.statusText}`);
+                }
+                
+                const data = await graphResponse.json();
+                
+                // Display the response
+                apiResponseData.textContent = JSON.stringify(data, null, 2);
+                apiResponse.style.display = "block";
+                
+            } catch (error) {
+                console.error("Error calling Graph API:", error);
+                
+                if (error instanceof msal.InteractionRequiredAuthError) {
+                    // If silent token acquisition fails, try interactive
+                    console.log("Interaction required, acquiring token interactively");
+                    msalInstance.acquireTokenRedirect(tokenRequest);
+                } else {
+                    // Display the error
+                    apiResponseData.textContent = `Error: ${error.message || "Unknown error"}`;
+                    apiResponse.style.display = "block";
+                    showStatus(`API error: ${error.message || "Unknown error"}`, true);
+                }
+            }
+        }
+
+        // Set up event listeners
+        signInButton.addEventListener("click", signIn);
+        signOutButton.addEventListener("click", signOut);
+        callApiButton.addEventListener("click", callMsGraphApi);
+
+        // Initialize
+        window.addEventListener("load", () => {
+            handleRedirectResponse();
+        });
+
+        // Also check for hash parameters on page load
+        if (window.location.hash) {
+            console.log("Hash parameters detected, handling redirect");
+            handleRedirectResponse();
+        }
+    </script>
+</body>
+</html>
