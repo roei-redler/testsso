@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הוראות לקראת החופה</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Playpen+Sans+Hebrew:wght@400..800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg-wine-deep:#2c1420;
+    --bg-wine-mid:#5c2e35;
+    --bg-ember:#a1613f;
+    --gold:#c9a15e;
+    --gold-soft:#ecd6a3;
+    --parchment:#fbf1e1;
+    --parchment-edge:#f1e2c4;
+    --ink:#3b2416;
+    --ink-soft:#725338;
+    --ember-glow:#e08a52;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background:var(--bg-wine-deep);
+  }
+
+  body{
+    font-family:'Frank Ruhl Libre', serif;
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+
+  .scene{
+    position:relative;
+    min-height:100vh;
+    width:100%;
+    padding:clamp(32px,7vw,80px) 16px 90px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    background:linear-gradient(160deg, var(--bg-wine-deep) 0%, var(--bg-wine-mid) 48%, var(--bg-ember) 100%);
+    background-size:160% 160%;
+    animation:gradientShift 22s ease-in-out infinite;
+    overflow:hidden;
+  }
+
+  @keyframes gradientShift{
+    0%,100%{background-position:10% 20%;}
+    50%{background-position:90% 80%;}
+  }
+
+  .glow-orb{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(70px);
+    opacity:.32;
+    pointer-events:none;
+    z-index:0;
+  }
+  .glow-orb.one{
+    width:340px;height:340px;
+    top:-60px; right:-40px;
+    background:radial-gradient(circle, var(--ember-glow), transparent 70%);
+    animation:drift1 19s ease-in-out infinite;
+  }
+  .glow-orb.two{
+    width:280px;height:280px;
+    bottom:-40px; left:-60px;
+    background:radial-gradient(circle, var(--gold), transparent 70%);
+    animation:drift2 24s ease-in-out infinite;
+  }
+  @keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(-30px,35px);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(25px,-30px);}}
+
+  .header{
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    max-width:640px;
+  }
+
+  .chuppah{
+    width:clamp(170px,32vw,240px);
+    height:auto;
+    display:block;
+    margin-bottom:6px;
+    opacity:0;
+    animation:riseIn .9s ease forwards;
+    animation-delay:.1s;
+  }
+
+  .flame{
+    transform-origin:124px 24px;
+    animation:flicker 2.6s ease-in-out infinite;
+    filter:
+      drop-shadow(0 0 6px rgba(232,168,87,.85))
+      drop-shadow(0 0 16px rgba(184,97,47,.55));
+  }
+  @keyframes flicker{
+    0%,100%{transform:scale(1,1) skewX(0deg); opacity:1;}
+    25%{transform:scale(1.06,.94) skewX(-2.5deg); opacity:.9;}
+    50%{transform:scale(.95,1.06) skewX(2deg); opacity:1;}
+    75%{transform:scale(1.03,.97) skewX(-1deg); opacity:.94;}
+  }
+
+  .canopy-fabric{
+    transform-origin:124px 48px;
+    animation:billow 6.5s ease-in-out infinite;
+  }
+  @keyframes billow{
+    0%,100%{transform:scaleY(1) skewX(0deg);}
+    50%{transform:scaleY(1.025) skewX(.6deg);}
+  }
+
+  h1.title{
+    font-family:'Playpen Sans Hebrew', cursive;
+    font-weight:700;
+    font-size:clamp(2.1rem,6.4vw,3.5rem);
+    color:var(--gold-soft);
+    margin:4px 0 2px;
+    text-shadow:0 2px 22px rgba(0,0,0,.4);
+    opacity:0;
+    animation:riseIn .9s ease forwards;
+    animation-delay:.55s;
+  }
+
+  h2.subtitle{
+    font-family:'Playpen Sans Hebrew', cursive;
+    font-weight:400;
+    font-size:clamp(1.05rem,2.8vw,1.4rem);
+    color:var(--gold);
+    margin:0 0 22px;
+    opacity:0;
+    animation:riseIn .9s ease forwards;
+    animation-delay:.9s;
+  }
+
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:min(260px,70%);
+    margin-bottom:30px;
+    opacity:0;
+    animation:riseIn .9s ease forwards;
+    animation-delay:1.15s;
+  }
+  .divider .line{
+    flex:1;
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .divider .diamond{
+    width:8px;height:8px;
+    background:var(--gold-soft);
+    transform:rotate(45deg);
+    box-shadow:0 0 8px 1px rgba(232,168,87,.7);
+    flex-shrink:0;
+  }
+
+  @keyframes riseIn{
+    from{opacity:0; transform:translateY(18px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .card{
+    position:relative;
+    z-index:1;
+    width:min(680px,92vw);
+    background:linear-gradient(180deg, var(--parchment), var(--parchment-edge));
+    border-radius:20px;
+    padding:clamp(26px,5.5vw,58px);
+    box-shadow:
+      0 24px 60px rgba(18,7,9,.45),
+      0 0 0 1px rgba(201,161,94,.3) inset;
+    opacity:0;
+    animation:riseIn 1s ease forwards;
+    animation-delay:1.4s;
+  }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    opacity:.06;
+    mix-blend-mode:multiply;
+    pointer-events:none;
+    background-image:repeating-linear-gradient(0deg, rgba(59,36,22,.5) 0 1px, transparent 1px 3px);
+  }
+
+  #typewriter-text{
+    position:relative;
+    font-size:clamp(1.02rem,2.15vw,1.22rem);
+    line-height:1.95;
+    color:var(--ink);
+  }
+
+  #typewriter-text p{
+    margin:0 0 1.15em;
+  }
+
+  #typewriter-text ul{
+    list-style:none;
+    margin:0 0 1.15em;
+    padding:0;
+  }
+
+  #typewriter-text li{
+    position:relative;
+    padding-right:1.4em;
+    margin-bottom:.55em;
+    color:var(--ink);
+  }
+
+  #typewriter-text li::before{
+    content:"";
+    position:absolute;
+    right:0;
+    top:.65em;
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 6px 1px var(--ember-glow);
+  }
+
+  .cursor{
+    display:inline-block;
+    width:.1em;
+    height:1em;
+    margin-inline-start:2px;
+    background:var(--ink-soft);
+    vertical-align:-0.15em;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{
+    0%,49%{opacity:1;}
+    50%,100%{opacity:0;}
+  }
+
+  .actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    gap:16px 22px;
+    margin-top:clamp(28px,5vw,40px);
+    position:relative;
+    z-index:1;
+    opacity:0;
+    animation:riseIn 1s ease forwards;
+    animation-delay:1.6s;
+  }
+
+  .speed-control{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Frank Ruhl Libre', serif;
+    font-size:.85rem;
+    color:var(--gold-soft);
+  }
+
+  .speed-control label{
+    white-space:nowrap;
+  }
+
+  .speed-control input[type="range"]{
+    -webkit-appearance:none;
+    appearance:none;
+    width:120px;
+    height:4px;
+    border-radius:999px;
+    background:linear-gradient(90deg, var(--gold), rgba(201,161,94,.25));
+    cursor:pointer;
+  }
+  .speed-control input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:15px;height:15px;
+    border-radius:50%;
+    background:var(--gold-soft);
+    box-shadow:0 0 6px 1px rgba(232,168,87,.7);
+    cursor:pointer;
+    border:1px solid rgba(59,36,22,.3);
+  }
+  .speed-control input[type="range"]::-moz-range-thumb{
+    width:15px;height:15px;
+    border-radius:50%;
+    background:var(--gold-soft);
+    box-shadow:0 0 6px 1px rgba(232,168,87,.7);
+    cursor:pointer;
+    border:1px solid rgba(59,36,22,.3);
+  }
+  .speed-control input[type="range"]:focus-visible{
+    outline:2px solid var(--gold-soft);
+    outline-offset:3px;
+  }
+
+  #speed-value{
+    min-width:2.6em;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+    color:var(--gold);
+  }
+
+  .credit{
+    position:relative;
+    z-index:1;
+    max-width:480px;
+    margin-top:52px;
+    text-align:center;
+    font-family:'Frank Ruhl Libre', serif;
+    font-size:.8rem;
+    line-height:1.85;
+    color:rgba(236,214,163,.55);
+    opacity:0;
+    transform:translateY(10px);
+    transition:opacity 1.2s ease, transform 1.2s ease;
+    pointer-events:none;
+  }
+  .credit.visible{
+    opacity:1;
+    transform:translateY(0);
+    pointer-events:auto;
+  }
+  .credit p{
+    margin:0 0 .6em;
+  }
+  .credit a{
+    color:var(--gold-soft);
+    text-decoration:underline;
+    text-decoration-color:rgba(201,161,94,.5);
+    text-underline-offset:2px;
+  }
+  .credit a:hover{
+    color:#fff;
+  }
+  .credit-divider{
+    width:60px;
+    height:1px;
+    margin:0 auto 18px;
+    background:linear-gradient(90deg, transparent, rgba(201,161,94,.5), transparent);
+  }
+  .credit-original{
+    font-style:italic;
+    opacity:.9;
+    font-size:.78rem;
+  }
+
+  #gate-scene{
+    justify-content:center;
+  }
+
+  .letter-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:32px;
+    position:relative;
+    z-index:1;
+    perspective:1400px;
+  }
+
+  .letter-card{
+    width:min(300px,78vw);
+    padding:44px 26px;
+    background:linear-gradient(160deg, var(--parchment), var(--parchment-edge));
+    border-radius:12px;
+    box-shadow:
+      0 22px 55px rgba(15,6,8,.5),
+      0 0 0 1px rgba(201,161,94,.35) inset;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    transform-style:preserve-3d;
+    transform-origin:center;
+    animation:letterSpin 2.4s cubic-bezier(.65,.05,.36,1) both;
+  }
+  .letter-card::before,
+  .letter-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:12px;
+    background:linear-gradient(160deg, var(--parchment-edge), var(--parchment));
+    z-index:-1;
+  }
+  .letter-card::before{ transform:translateZ(-6px) translate(4px,5px) rotate(-2deg); opacity:.85; }
+  .letter-card::after{ transform:translateZ(-12px) translate(8px,9px) rotate(2deg); opacity:.6; }
+
+  @keyframes letterSpin{
+    0%{ transform:rotateY(-180deg) scale(.72); opacity:0; }
+    55%{ opacity:1; }
+    100%{ transform:rotateY(0deg) scale(1); opacity:1; }
+  }
+
+  .letter-face{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+    backface-visibility:hidden;
+  }
+
+  .letter-line{
+    font-family:'Playpen Sans Hebrew', cursive;
+    font-size:clamp(1.5rem,4.6vw,2rem);
+    color:var(--ink);
+    text-align:center;
+    margin:0;
+  }
+
+  .seal{
+    width:52px;height:52px;
+    animation:heartbeat 2.6s ease-in-out infinite;
+    filter:drop-shadow(0 3px 8px rgba(160,70,40,.5));
+  }
+  @keyframes heartbeat{
+    0%,100%{ transform:scale(1); }
+    15%{ transform:scale(1.12); }
+    30%{ transform:scale(1); }
+    45%{ transform:scale(1.08); }
+    60%{ transform:scale(1); }
+  }
+
+  .password-form{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    width:min(300px,78vw);
+    opacity:0;
+    animation:riseIn .9s ease forwards;
+    animation-delay:2.3s;
+  }
+
+  .password-label{
+    font-family:'Frank Ruhl Libre', serif;
+    font-size:.85rem;
+    color:var(--gold-soft);
+    text-align:center;
+    margin:0;
+  }
+
+  #password-input{
+    width:100%;
+    text-align:center;
+    letter-spacing:.22em;
+    font-family:'Frank Ruhl Libre', serif;
+    font-size:1rem;
+    padding:.7em 1em;
+    border-radius:10px;
+    border:1px solid rgba(201,161,94,.5);
+    background:rgba(255,255,255,.06);
+    color:var(--gold-soft);
+    outline:none;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  #password-input::placeholder{ color:rgba(236,214,163,.35); letter-spacing:.3em; }
+  #password-input:focus{ border-color:var(--gold-soft); background:rgba(255,255,255,.1); }
+  #password-input.shake{ animation:inputShake .5s ease; }
+  @keyframes inputShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px); }
+    40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-6px); }
+    80%{ transform:translateX(6px); }
+  }
+
+  #unlock-btn{
+    font-family:'Frank Ruhl Libre', serif;
+    font-size:.92rem;
+    font-weight:600;
+    color:var(--bg-wine-deep);
+    background:linear-gradient(180deg, var(--gold-soft), var(--gold));
+    border:none;
+    border-radius:999px;
+    padding:.65em 1.9em;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.3);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  #unlock-btn:hover{ transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,0,0,.35); }
+  #unlock-btn:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:3px; }
+
+  .password-error{
+    color:#f2a3a3;
+    font-size:.82rem;
+    margin:0;
+  }
+  .password-error[hidden]{ display:none; }
+
+  #gate-scene.unlocking{
+    transition:opacity .8s ease, transform .8s ease;
+    opacity:0;
+    transform:scale(.94);
+    pointer-events:none;
+  }
+
+  #skip-btn{
+    font-family:'Frank Ruhl Libre', serif;
+    font-size:.9rem;
+    color:var(--gold-soft);
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(201,161,94,.5);
+    border-radius:999px;
+    padding:.6em 1.6em;
+    cursor:pointer;
+    transition:background .25s ease, border-color .25s ease, transform .2s ease;
+  }
+  #skip-btn:hover{
+    background:rgba(201,161,94,.14);
+    border-color:var(--gold);
+    transform:translateY(-1px);
+  }
+  #skip-btn:focus-visible{
+    outline:2px solid var(--gold-soft);
+    outline-offset:3px;
+  }
+  #skip-btn[hidden]{display:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    .scene,.glow-orb,.flame,.canopy-fabric,.cursor,
+    .chuppah,h1.title,h2.subtitle,.divider,.card,.actions,
+    .letter-card,.password-form,.seal{
+      animation:none !important;
+      opacity:1 !important;
+      transform:none !important;
+      background-position:20% 30% !important;
+    }
+    .credit,#gate-scene.unlocking,#password-input.shake{
+      transition:none !important;
+      animation:none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="gate-scene">
+  <div class="glow-orb one"></div>
+  <div class="glow-orb two"></div>
+
+  <div class="letter-wrap">
+    <div class="letter-card">
+      <div class="letter-face">
+        <p class="letter-line">לאשת חיל שלי</p>
+        <svg class="seal" viewBox="0 0 40 40" aria-hidden="true">
+          <defs>
+            <radialGradient id="sealGrad" cx="50%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#e8a857"/>
+              <stop offset="100%" stop-color="#a1613f"/>
+            </radialGradient>
+          </defs>
+          <circle cx="20" cy="20" r="18" fill="url(#sealGrad)"/>
+          <path d="M20 28 C13 22 9 18 9 13.5 C9 9.5 12.5 7 16 8.5 C18 9.3 19.3 11 20 12.5 C20.7 11 22 9.3 24 8.5 C27.5 7 31 9.5 31 13.5 C31 18 27 22 20 28 Z" fill="#fff8ea" opacity="0.92"/>
+        </svg>
+      </div>
+    </div>
+
+    <form id="password-form" class="password-form" autocomplete="off">
+      <p class="password-label">הקלידי את הסיסמה כדי לפתוח את המכתב</p>
+      <input type="password" id="password-input" inputmode="numeric" maxlength="16" autocomplete="off" placeholder="••••••••••••••••" required>
+      <button type="submit" id="unlock-btn">פתחי את המכתב</button>
+      <p id="password-error" class="password-error" hidden>הסיסמה שגויה — נסי שוב</p>
+    </form>
+  </div>
+</div>
+
+<div class="scene" id="scroll-stage" style="display:none;">
+  <div class="glow-orb one"></div>
+  <div class="glow-orb two"></div>
+
+  <div class="header">
+    <svg class="chuppah" viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="flameGrad" cx="50%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#fff0cf"/>
+          <stop offset="55%" stop-color="#e8a857"/>
+          <stop offset="100%" stop-color="#b9612f"/>
+        </radialGradient>
+        <linearGradient id="canopyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e4c989" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#c9a15e" stop-opacity="0.5"/>
+        </linearGradient>
+      </defs>
+
+      <g stroke="#c9a15e" stroke-width="3" stroke-linecap="round">
+        <line x1="34" y1="150" x2="34" y2="55"/>
+        <line x1="94" y1="150" x2="94" y2="42"/>
+        <line x1="154" y1="150" x2="154" y2="42"/>
+        <line x1="214" y1="150" x2="214" y2="55"/>
+      </g>
+
+      <g class="canopy-fabric">
+        <path d="M30 55 Q62 30 94 42 Q124 22 154 42 Q186 30 218 55 L218 62 Q186 40 154 52 Q124 34 94 52 Q62 40 30 62 Z" fill="url(#canopyGrad)" opacity="0.4"/>
+        <path d="M30 55 Q62 30 94 42 Q124 22 154 42 Q186 30 218 55" fill="none" stroke="#c9a15e" stroke-width="3.5" stroke-linecap="round"/>
+      </g>
+
+      <g fill="#e4c989">
+        <circle cx="34" cy="55" r="3.5"/>
+        <circle cx="94" cy="42" r="3.5"/>
+        <circle cx="154" cy="42" r="3.5"/>
+        <circle cx="214" cy="55" r="3.5"/>
+      </g>
+
+      <g class="flame">
+        <path d="M124 6 C130 14 134 20 130 27 C128 30 120 30 118 27 C114 20 118 14 124 6 Z" fill="url(#flameGrad)"/>
+      </g>
+    </svg>
+
+    <h1 class="title">הוראות לקראת החופה</h1>
+    <h2 class="subtitle">(מהחתן לכלה)</h2>
+
+    <div class="divider"><span class="line"></span><span class="diamond"></span><span class="line"></span></div>
+  </div>
+
+  <div class="card">
+    <div id="typewriter-text" dir="rtl"></div>
+  </div>
+
+  <div class="actions">
+    <div class="speed-control">
+      <label for="speed-range">מהירות הקלדה</label>
+      <input type="range" id="speed-range" min="0.3" max="2.0" step="0.1" value="0.6" aria-label="מהירות הקלדה">
+      <span id="speed-value">0.6×</span>
+    </div>
+    <button id="skip-btn" type="button">✦ הצג את כל הטקסט</button>
+  </div>
+
+  <div class="credit" id="credit-block">
+    <div class="credit-divider"></div>
+    <p>נלקח ועובד מחדש מתוך:<br>
+      <a href="https://www.facebook.com/hagit.zahavi/posts/%D7%94%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%9C%D7%A4%D7%A0%D7%99-%D7%91%D7%99%D7%A7%D7%95%D7%A8-%D7%91%D7%9B%D7%93%D7%95%D7%A8-%D7%94%D7%90%D7%A8%D7%A5-%D7%A2%D7%95%D7%96%D7%A8-%D7%92%D7%9D-%D7%90%D7%97%D7%A8%D7%99-%D7%A9%D7%9E%D7%92%D7%99%D7%A2%D7%99%D7%9D-%D7%AA%D7%95%D7%93%D7%94-reuven-barak-%D7%A9%D7%AA%D7%A8%D7%92%D7%9E%D7%AA/10238283100550964/" target="_blank" rel="noopener noreferrer">הפוסט המקורי בפייסבוק</a>
+    </p>
+    <p class="credit-original">
+      הוראות לפני ביקור בכדור הארץ — Instructions before visiting earth<br>
+      ג'יימס מקריי — James Mccrae
+    </p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CORRECT_PASSWORD = '2503199911091996';
+  var gateScene = document.getElementById('gate-scene');
+  var scrollStage = document.getElementById('scroll-stage');
+  var passwordForm = document.getElementById('password-form');
+  var passwordInput = document.getElementById('password-input');
+  var passwordError = document.getElementById('password-error');
+
+  passwordForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var val = passwordInput.value.trim();
+    if (val === CORRECT_PASSWORD){
+      passwordError.setAttribute('hidden','');
+      unlockLetter();
+    } else {
+      passwordError.removeAttribute('hidden');
+      passwordInput.classList.remove('shake');
+      void passwordInput.offsetWidth;
+      passwordInput.classList.add('shake');
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+  });
+
+  function unlockLetter(){
+    gateScene.classList.add('unlocking');
+    setTimeout(function(){
+      gateScene.style.display = 'none';
+      scrollStage.style.display = 'flex';
+      window.scrollTo({top:0, behavior:'auto'});
+      startScroll();
+    }, 820);
+  }
+
+  var blocks = [
+    {type:'p', text:'למקרה שתעמדי לצידי תחת היריעה ותגלי פתאום ששתי הנשמות שלנו, שנגזרו ממקור אחד, חזרו להיפגש כאן למטה – אל תחששי. הרגע הזה נכתב עבורנו עוד לפני שנברא העולם. נבחרנו לקבל הזדמנות אחת ויחידה לבנות יחד מקדש מעט ולעשות לנו בית שבו השכינה תוכל לשכון.'},
+    {type:'p', text:'המציאות בחוץ תהיה לפעמים צפופה, עמוסה ורועשת. יהיו הסחות דעת, טרדות של יום-יום ושגרת חולין שינסו לגרום לנו לשכוח את טבענו האמיתי ואת האור הגדול שהדלקנו כאן הערב.'},
+    {type:'p', text:'אנחנו נחווה יחד רגעים של אושר צרוף וקרבה עמוקה, אבל גם ימים של עייפות, קוצר רוח או אי-הבנות. כשהסערות הקטנות האלה יגיעו, אל תבהלי: לא משנה מה נתרגש עלינו, החיבור היסודי בין הנשמות שלנו נשאר שלם וטהור לחלוטין.'},
+    {type:'p', text:'אם אי פעם תרגישי שאנחנו הולכים לאיבוד או מתרחקים, אני מבקש ממך: עזרי לי להאיט. בואי נניח בצד את הגאווה ואת הרצון להיות צודקים, ונחזיר את המחשבות שלנו אל קול הדממה הדקה ואל התפילה השקטה שבלב. שם נמצא השותף השלישי שלנו, ושם נזכר שאיננו יריבים – אנו גוף אחד.'},
+    {type:'p', text:'בעולם הזה, שום דבר חומרי אינו קבוע. תוכניות ישתנו, ודברים יבואו וילכו. אל תיאחזי חזק מדי בציפיות קשיחות, וכאשר נצטרך למחול, לוותר או לשחרר כעס – בואי נעשה זאת בחן ובמהירות. שום דבר אינו באמת שלנו, הכל פיקדון של חסד.'},
+    {type:'p', text:'כשנצעד יחד בדרך הזו, בואי נבטיח להיות אורחים טובים בחיים של זו שזה:'},
+    {type:'ul-start'},
+    {type:'li', text:'נצעד ברכות ובמידת הענווה.'},
+    {type:'li', text:'נקשיב אחד לשנייה הרבה יותר ממה שנמהר לדבר.'},
+    {type:'li', text:'נבקש לתת יותר ממה שאנחנו מצפים לקבל.'},
+    {type:'ul-end'},
+    {type:'p', text:'ואנא ממך, אל תנעלי את הלב הרך והמתוק שלך בתוך כלוב מוגן של זכוכית מחוסמת.'},
+    {type:'p', text:'בית נאמן לא בונים מזהירות מופרזת, אלא מפתיחות, מפגיעות וממסירות נפש.'},
+    {type:'p', text:'הזמן שלנו יחד יעבור מהר ממה שנשים לב. בואי לא נחשוש מקמטים או ממשקעים של דרך ארוכה; בואי ניצור מסע מלא בחסד, בצחוק, בתורה ובקדושה – כדי שכשנחזור בסוף הימים אל המקור, נתיצב שם בידיים מלאות, עם סיפור אהבה זך שראוי לספר בפני פמליה של מעלה.'}
+  ];
+
+  var container = document.getElementById('typewriter-text');
+  var skipBtn = document.getElementById('skip-btn');
+  var cursor = document.createElement('span');
+  cursor.className = 'cursor';
+
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var creditEl = document.getElementById('credit-block');
+  var creditIntersecting = false;
+  var creditRevealed = false;
+
+  function maybeShowCredit(){
+    if (finished && creditIntersecting && !creditRevealed){
+      creditEl.classList.add('visible');
+      creditRevealed = true;
+    }
+  }
+
+  if ('IntersectionObserver' in window){
+    var creditObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        creditIntersecting = entry.isIntersecting;
+        if (creditIntersecting) maybeShowCredit();
+      });
+    }, {threshold:0.15});
+    creditObserver.observe(creditEl);
+  } else {
+    creditIntersecting = true;
+  }
+
+  var blockIndex = 0, charIndex = 0;
+  var currentEl = null, currentList = null;
+  var timerId = null;
+  var finished = false;
+
+  var PUNCT_PAUSE = {'.':420,',':240,';':300,':':300,'!':420,'?':420,'–':280,'-':150};
+
+  var speedRange = document.getElementById('speed-range');
+  var speedValue = document.getElementById('speed-value');
+  var speedFactor = parseFloat(speedRange.value) || 0.6;
+
+  speedRange.addEventListener('input', function(){
+    speedFactor = parseFloat(speedRange.value);
+    speedValue.textContent = speedFactor.toFixed(1) + '×';
+  });
+
+  function scaled(ms){
+    return ms / speedFactor;
+  }
+
+  function baseDelay(ch){
+    var d = 34 + Math.random()*30;
+    if (PUNCT_PAUSE[ch]) d += PUNCT_PAUSE[ch];
+    return scaled(d);
+  }
+
+  function renderAll(){
+    if (timerId) { clearTimeout(timerId); timerId = null; }
+    container.innerHTML = '';
+    var list = null;
+    for (var i=0;i<blocks.length;i++){
+      var b = blocks[i];
+      if (b.type === 'ul-start'){ list = document.createElement('ul'); container.appendChild(list); }
+      else if (b.type === 'ul-end'){ list = null; }
+      else if (b.type === 'p'){ var p = document.createElement('p'); p.textContent = b.text; container.appendChild(p); }
+      else if (b.type === 'li'){ var li = document.createElement('li'); li.textContent = b.text; (list||container).appendChild(li); }
+    }
+    container.appendChild(cursor);
+    finished = true;
+    skipBtn.setAttribute('hidden','');
+    maybeShowCredit();
+  }
+
+  function maybeScrollIntoView(el){
+    var rect = el.getBoundingClientRect();
+    if (rect.bottom > window.innerHeight - 40){
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+
+  function typeNext(){
+    if (finished) return;
+    var block = blocks[blockIndex];
+    if (!block){
+      finished = true;
+      skipBtn.setAttribute('hidden','');
+      maybeShowCredit();
+      return;
+    }
+
+    if (block.type === 'ul-start'){
+      currentList = document.createElement('ul');
+      container.appendChild(currentList);
+      blockIndex++; charIndex = 0;
+      timerId = setTimeout(typeNext, scaled(180));
+      return;
+    }
+    if (block.type === 'ul-end'){
+      currentList = null;
+      blockIndex++; charIndex = 0;
+      timerId = setTimeout(typeNext, scaled(320));
+      return;
+    }
+
+    var isLi = block.type === 'li';
+    if (charIndex === 0){
+      currentEl = document.createElement(isLi ? 'li' : 'p');
+      (isLi ? currentList : container).appendChild(currentEl);
+      maybeScrollIntoView(currentEl);
+    }
+
+    if (charIndex < block.text.length){
+      var ch = block.text[charIndex];
+      currentEl.appendChild(document.createTextNode(ch));
+      currentEl.appendChild(cursor);
+      charIndex++;
+      timerId = setTimeout(typeNext, baseDelay(ch));
+    } else {
+      blockIndex++; charIndex = 0;
+      timerId = setTimeout(typeNext, isLi ? scaled(380) : scaled(700));
+    }
+  }
+
+  skipBtn.addEventListener('click', renderAll);
+
+  function startScroll(){
+    if (reduced){
+      renderAll();
+    } else {
+      setTimeout(typeNext, 2100);
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
