@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>אהובה שלי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;600&family=Suez+One&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:   #FBF6EF;
+    --ink:     #3B2C28;
+    --ink-soft:#5A4640;
+    --wine:    #6E2A3A;
+    --wine-soft:#8C4356;
+    --gold:    #B08968;
+    --blush:   #F4DED6;
+    --sky:     #F8E9DE;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    color:var(--ink);
+  }
+
+  body{
+    font-family:'Frank Ruhl Libre', serif;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -10%, var(--sky) 0%, transparent 60%),
+      linear-gradient(160deg, var(--blush) 0%, #F6EAE1 35%, var(--paper) 70%);
+    background-attachment: fixed;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 32px 16px;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* subtle paper grain */
+  body::after{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none;
+    opacity:0.035;
+    mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* slow ambient dawn glow behind the card */
+  .glow{
+    position:absolute;
+    width:min(700px, 90vw);
+    height:min(700px, 90vw);
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(244,222,214,0.9) 0%, rgba(248,233,222,0.0) 70%);
+    filter: blur(10px);
+    z-index:0;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .glow{ animation: breathe 11s ease-in-out infinite alternate; }
+    .card{ animation: rise 1.1s cubic-bezier(.2,.7,.3,1) both; }
+  }
+
+  @keyframes breathe{
+    from{ opacity:.55; transform:scale(1); }
+    to{ opacity:1; transform:scale(1.06); }
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(18px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .card{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:640px;
+    background:var(--paper);
+    border:1px solid rgba(110,42,58,0.10);
+    border-radius:22px;
+    box-shadow:
+      0 30px 60px -25px rgba(59,44,40,0.35),
+      0 2px 0 rgba(255,255,255,0.6) inset;
+    padding: clamp(32px, 6vw, 64px) clamp(26px, 7vw, 68px);
+  }
+
+  .emblem{
+    display:flex;
+    justify-content:center;
+    color:var(--wine-soft);
+    margin-bottom: clamp(18px, 3vw, 28px);
+  }
+  .emblem svg{ width: clamp(120px, 22vw, 170px); height:auto; }
+
+  .salutation{
+    font-family:'Suez One', serif;
+    font-size: clamp(1.7rem, 1.1rem + 2.6vw, 2.5rem);
+    color:var(--wine);
+    text-align:right;
+    margin: 0 0 clamp(20px, 3vw, 30px) 0;
+    line-height:1.3;
+  }
+
+  .letter p{
+    text-align:right;
+    font-size: clamp(1.02rem, 0.95rem + 0.4vw, 1.18rem);
+    line-height:2;
+    letter-spacing:0.005em;
+    color:var(--ink-soft);
+    margin: 0 0 1.65em 0;
+  }
+
+  .letter p:last-of-type{ margin-bottom:0; }
+
+  .climax{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin: clamp(30px, 5vw, 46px) 0;
+  }
+  .climax .rule{
+    flex:1;
+    height:1px;
+    background: linear-gradient(to var(--dir, left), transparent, var(--gold), transparent);
+  }
+  .climax span.text{
+    font-family:'Suez One', serif;
+    font-size: clamp(1.35rem, 1.05rem + 1.6vw, 1.9rem);
+    color:var(--wine);
+    white-space:nowrap;
+  }
+
+  .signoff{
+    text-align:center;
+    margin-top: clamp(28px, 4vw, 40px);
+  }
+
+  .signoff .closing{
+    font-size: clamp(1.02rem, 0.95rem + 0.3vw, 1.15rem);
+    color:var(--ink-soft);
+    margin:0 0 8px 0;
+  }
+
+  .signoff .name{
+    font-family:'Suez One', serif;
+    font-size: clamp(1.7rem, 1.2rem + 2.2vw, 2.3rem);
+    color:var(--wine);
+    letter-spacing:0.04em;
+    position:relative;
+    display:inline-block;
+    margin:0;
+  }
+
+  .signoff .flourish{
+    display:block;
+    width: 84px;
+    height: 10px;
+    margin: 10px auto 0 auto;
+  }
+  .signoff .flourish path{
+    fill:none;
+    stroke: var(--gold);
+    stroke-width:1.6;
+    stroke-linecap:round;
+  }
+
+  @media (max-width:420px){
+    .climax{ gap:10px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="glow"></div>
+
+  <main class="card">
+
+    <div class="emblem" aria-hidden="true">
+      <svg viewBox="0 0 220 110" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M20,30 Q50,50 80,30 Q110,50 140,30 Q170,50 200,30" />
+        <line x1="20" y1="30" x2="20" y2="92" />
+        <line x1="80" y1="30" x2="80" y2="92" />
+        <line x1="140" y1="30" x2="140" y2="92" />
+        <line x1="200" y1="30" x2="200" y2="92" />
+        <line x1="12" y1="92" x2="28" y2="92" />
+        <line x1="72" y1="92" x2="88" y2="92" />
+        <line x1="132" y1="92" x2="148" y2="92" />
+        <line x1="192" y1="92" x2="208" y2="92" />
+        <circle cx="20" cy="26" r="3" fill="currentColor" stroke="none"/>
+        <circle cx="80" cy="26" r="3" fill="currentColor" stroke="none"/>
+        <circle cx="140" cy="26" r="3" fill="currentColor" stroke="none"/>
+        <circle cx="200" cy="26" r="3" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
+
+    <p class="salutation">אהובה שלי,</p>
+
+    <div class="letter">
+      <p>עוד כמה שעות בודדות הכל קורה. הלב שלי דופק בקצב שקשה להסביר – תערובת משוגעת של התרגשות טהורה, פרפרים בבטן, ובעיקר המון שקט פנימי. השקט שנובע מהידיעה הפשוטה והעמוקה שאני מגיע בדיוק למקום שבו אני אמור להיות.</p>
+
+      <p>אני יושב כאן עכשיו, מוקף בכל ההמולה של הבוקר הזה, וכל מה שאני מצליח לחשוב עליו זה אותך. אני נזכר בדרך שעברנו יחד, בכל הצעדים הקטנים והגדולים שהביאו אותנו לרגע הזה, ולא מפסיק להודות על היום שבו נכנסת לחיים שלי. הפכת את העולם שלי לעשיר יותר, מצחיק יותר, מלא במשמעות ובאור. את הבית שלי.</p>
+
+      <p>אני לא יכול לחכות לראות אותך. אני יודע שתהיי הכי יפה בעולם, אבל יותר מזה – אני מחכה לראות את החיוך שלך, להביט לך בעיניים ולדעת שכל המאמצים, התכנונים והציפייה התנקזו לרגע המזוקק והקסום הזה.</p>
+
+      <p>כשאעמוד מתחת לחופה ואראה אותך פוסעת לעברי, אדע בוודאות שאני האיש הכי בר מזל שיש. תזכרי לנשום עמוק, לקחת שנייה כדי להרגיש את האהבה שעוטפת אותך מכל כיוון, ולדעת שבצד השני של השביל עומד מישהו שאוהב אותך בכל נימי נפשו, שמתרגש להחזיק לך את היד ולבנות איתך חיים שלמים.</p>
+    </div>
+
+    <div class="climax">
+      <span class="rule"></span>
+      <span class="text">עוד מעט ממש.</span>
+      <span class="rule"></span>
+    </div>
+
+    <div class="signoff">
+      <p class="closing">שלך לתמיד,</p>
+      <p class="name">רואי</p>
+      <svg class="flourish" viewBox="0 0 84 10" aria-hidden="true">
+        <path d="M2,6 C 20,-2 30,10 42,4 C 54,-2 64,10 82,4" />
+      </svg>
+    </div>
+
+  </main>
+
+</body>
+</html>
